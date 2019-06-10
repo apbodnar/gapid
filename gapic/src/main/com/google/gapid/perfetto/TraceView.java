@@ -65,6 +65,10 @@ public class TraceView extends Composite
   private final PanelCanvas canvas;
 
   public TraceView(Composite parent, Models models, Widgets widgets) {
+    this(parent, models, widgets, true);
+  }
+
+  public TraceView(Composite parent, Models models, Widgets widgets, boolean forCapture) {
     super(parent, SWT.NONE);
     this.models = models;
     this.state = new State(this);
@@ -193,7 +197,9 @@ public class TraceView extends Composite
     });
     updateScrollbars();
 
-    models.capture.addListener(this);
+    if (forCapture) {
+      models.capture.addListener(this);
+    }
     models.perfetto.addListener(this);
     state.addListener(this);
     addListener(SWT.Dispose, e -> {
@@ -202,7 +208,7 @@ public class TraceView extends Composite
       models.settings.perfettoSplitterWeights = topBottom.getWeights();
     });
 
-    if (!models.perfetto.isLoaded()) {
+    if (forCapture && !models.perfetto.isLoaded()) {
       loading.startLoading();
     }
   }
