@@ -734,6 +734,7 @@ func uniqueConfig() replay.Config {
 
 type profileRequest struct {
 	overrides *path.OverrideConfig
+	traceOptions *service.TraceOptions
 }
 
 func (a API) GetInitialPayload(ctx context.Context,
@@ -947,6 +948,7 @@ func (a API) Replay(
 			profile.AddResult(rr.Result)
 			makeReadable.imagesOnly = true
 			optimize = false
+			transforms.Add(&replay.WaitForFence{req.traceOptions})
 			if req.overrides.GetViewportSize() {
 				transforms.Add(minimizeViewport(ctx))
 			}
@@ -1150,10 +1152,11 @@ func (a API) Profile(
 	intent replay.Intent,
 	mgr replay.Manager,
 	hints *service.UsageHints,
+	traceOptions	*service.TraceOptions,
 	overrides *path.OverrideConfig) error {
 
 	c := uniqueConfig()
-	r := profileRequest{overrides}
+	r := profileRequest{overrides, traceOptions}
 
 	_, err := mgr.Replay(ctx, intent, c, r, a, hints, false)
 	return err

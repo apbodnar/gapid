@@ -41,6 +41,8 @@ type ReplayExecutor interface {
 	HandleNotification(context.Context, *gapir.Notification, gapir.Connection) error
 	// HandleFinished is notified when the given replay is finished.
 	HandleFinished(context.Context, error, gapir.Connection) error
+
+	HandleFenceReadyRequest(context.Context, *gapir.FenceReadyRequest, gapir.Connection, bind.Device) error
 }
 
 type backgroundConnection struct {
@@ -48,6 +50,7 @@ type backgroundConnection struct {
 	OS       *device.OS
 	ABI      *device.ABI
 	executor ReplayExecutor
+	device   bind.Device
 }
 
 func (e *backgroundConnection) BeginReplay(ctx context.Context, payload string, dependent string) error {
@@ -110,11 +113,10 @@ func (e *backgroundConnection) HandlePayloadRequest(ctx context.Context, payload
 
 // HandleFenceReadyRequest implements gapir.ReplayResponseHandler interface.
 func (e *backgroundConnection) HandleFenceReadyRequest(ctx context.Context, req *gapir.FenceReadyRequest, conn gapir.Connection) error {
-	ctx = status.Start(ctx, "Fence Ready Request")
-	defer status.Finish(ctx)
-	// TODO(apbodnar) Tell the connection executor to start a perfetto trace here
-
-	return conn.SendFenceReady(ctx, req.GetId())
+	if e.executor == nil {
+		return log.Err(ctx, nil, "No active replay connection for this returned data")
+	}
+	return e.executor.HandleFenceReadyRequest(ctx, req, conn, e.device)
 }
 
 // HandleCrashDump implements gapir.ReplayResponseHandler interface.
@@ -177,7 +179,7 @@ func (e *backgroundConnection) HandleResourceRequest(ctx context.Context, req *g
 
 // MakeBackgroundConnection creates a connection to the replay device that persists in the background.
 func MakeBackgroundConnection(ctx context.Context, device bind.Device, conn gapir.Connection, replayABI *device.ABI) (*backgroundConnection, error) {
-	bgc := &backgroundConnection{conn: conn, ABI: replayABI, OS: device.Instance().GetConfiguration().GetOS()}
+	bgc := &backgroundConnection{conn: conn, ABI: replayABI, OS: device.Instance().GetConfiguration().GetOS(), device: device}
 	c := make(chan error)
 	cctx := keys.Clone(context.Background(), ctx)
 	crash.Go(func() {

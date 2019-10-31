@@ -21,6 +21,7 @@ import (
 	"github.com/google/gapid/core/data/id"
 	"github.com/google/gapid/core/log"
 	"github.com/google/gapid/core/os/device"
+	"github.com/google/gapid/core/os/device/bind"
 	"github.com/google/gapid/gapir"
 	"github.com/google/gapid/gapis/database"
 	"github.com/google/gapid/gapis/replay/builder"
@@ -32,6 +33,7 @@ type executor struct {
 	dependent          string
 	handlePost         builder.PostDataHandler
 	handleNotification builder.NotificationHandler
+	fenceReadyCallback builder.FenceReadyRequestCallback
 	memoryLayout       *device.MemoryLayout
 	OS                 *device.OS
 	finished           chan error
@@ -48,6 +50,7 @@ func Execute(
 	payload gapir.Payload,
 	handlePost builder.PostDataHandler,
 	handleNotification builder.NotificationHandler,
+	fenceReadyCallback builder.FenceReadyRequestCallback,
 	connection *backgroundConnection,
 	memoryLayout *device.MemoryLayout,
 	os *device.OS) error {
@@ -62,6 +65,7 @@ func Execute(
 		dependent:          dependent,
 		handlePost:         handlePost,
 		handleNotification: handleNotification,
+		fenceReadyCallback: fenceReadyCallback,
 		memoryLayout:       memoryLayout,
 		OS:                 os,
 		finished:           make(chan error),
@@ -108,4 +112,11 @@ func (e executor) HandlePostData(ctx context.Context, postData *gapir.PostData, 
 func (e executor) HandleNotification(ctx context.Context, notification *gapir.Notification, conn gapir.Connection) error {
 	e.handleNotification(notification)
 	return nil
+}
+
+func (e executor) HandleFenceReadyRequest(ctx context.Context, req *gapir.FenceReadyRequest, conn gapir.Connection, device bind.Device) error {
+	ctx = status.Start(ctx, "Fence Ready Request")
+	defer status.Finish(ctx)
+	e.fenceReadyCallback(req, device)
+	return conn.SendFenceReady(ctx, req.GetId())
 }

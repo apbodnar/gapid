@@ -357,6 +357,7 @@ func (a API) Profile(
 	intent replay.Intent,
 	mgr replay.Manager,
 	hints *service.UsageHints,
+	traceOptions *service.TraceOptions,
 	overrides *path.OverrideConfig) error {
 
 	c := uniqueConfig()

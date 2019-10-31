@@ -29,7 +29,7 @@ const (
 	// handles to replay client handles (if handles are reused in the trace
 	// it will only print the last mapping).  Only works for Vulkan.
 	LogMappingsToFile        = false
-	LogTransformsToFile      = false
+	LogTransformsToFile      = true
 	LogTransformsToCapture   = false
 	SeparateMutateStates     = false
 	CheckRebuiltStateMatches = false
