@@ -792,6 +792,7 @@ func (a API) GetInitialPayload(ctx context.Context,
 	out transform.Writer) error {
 	transforms := transform.Transforms{}
 	transforms.Add(&makeAttachementReadable{false})
+	transforms.Add(&ProfilingLayers{})
 	transforms.Add(&dropInvalidDestroy{tag: "GetInitialPayload"})
 	initialCmds, im, _ := initialcmds.InitialCommands(ctx, capture)
 	out.State().Allocator.ReserveRanges(im)
@@ -1006,6 +1007,7 @@ func (a API) Replay(
 			makeReadable.imagesOnly = true
 			optimize = false
 			transforms.Add(NewWaitForPerfetto(req.traceOptions, req.handler, req.buffer))
+			transforms.Add(&ProfilingLayers{})
 			if req.overrides.GetViewportSize() {
 				transforms.Add(minimizeViewport(ctx))
 			}

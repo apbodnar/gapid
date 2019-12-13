@@ -22,15 +22,15 @@ const (
 	DeadSubCmdElimination      = false
 	DebugDeadCodeElimination   = false
 	DebugDependencyGraph       = false
-	DumpReplayProfile          = false
+	DumpReplayProfile          = true
 	AllInitialCommandsLive     = false
 	LogExtrasInTransforms      = false // Logs all commands' extras together with transforms
-	LogMemoryInExtras          = false // Logs all commands' read/write memory observation together with extras
+	LogMemoryInExtras          = true // Logs all commands' read/write memory observation together with extras
 	// Logs all mappings at the end of the replay from original trace
 	// handles to replay client handles (if handles are reused in the trace
 	// it will only print the last mapping).  Only works for Vulkan.
 	LogMappingsToFile        = false
-	LogTransformsToFile      = false
+	LogTransformsToFile      = true
 	LogTransformsToCapture   = false
 	SeparateMutateStates     = false
 	CheckRebuiltStateMatches = false
